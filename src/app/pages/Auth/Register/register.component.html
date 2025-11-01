@@ -1,0 +1,26 @@
+<div class="auth-card">
+  <h2>Register</h2>
+
+  <form (ngSubmit)="register()" #f="ngForm">
+    <div class="field">
+      <label>Full name</label>
+      <input type="text" name="fullName" [(ngModel)]="fullName" required />
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" name="email" [(ngModel)]="email" required />
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <input type="password" name="password" [(ngModel)]="password" required />
+    </div>
+
+    <button type="submit" class="btn">Register</button>
+
+    <p class="muted">Already have an account? <a routerLink="/login">Login</a></p>
+
+    <p class="error" *ngIf="message">{{ message }}</p>
+  </form>
+</div>

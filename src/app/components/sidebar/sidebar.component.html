@@ -1,0 +1,47 @@
+<!-- 🌙 Mobile Menu Toggle Button -->
+<button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
+  <div class="hamburger" [class.open]="isMobileMenuOpen">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</button>
+
+<!-- 🔳 Overlay (click to close sidebar on mobile) -->
+<div class="mobile-overlay" [class.show]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
+
+<!-- 🧭 Sidebar -->
+<aside class="sidebar" [class.open]="isMobileMenuOpen">
+  <!-- Logo Section -->
+  <div class="logo-section">
+    <div class="logo">
+      <span class="logo-icon">💰</span>
+      <h2>DK Balancify</h2>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li class="nav-item" *ngFor="let item of menuItems">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          (click)="closeMobileMenu()"
+          class="nav-link"
+        >
+          <span class="nav-icon" [innerHTML]="getIcon(item.icon)"></span>
+          <span class="nav-text">{{ item.name }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Logout -->
+  <div class="sidebar-footer">
+    <button class="logout-btn" (click)="logout()">
+      <i class="fa fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </button>
+  </div>
+</aside>

@@ -1,0 +1,102 @@
+.footer {
+  padding: 25px 0;
+  border-top: 1px solid #e0e0e0;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.social-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.connect-text {
+  font-size: 0.95em;
+  color: #555;
+  font-weight: 600;
+}
+
+.social-icons {
+  display: flex;
+  gap: 20px;
+}
+
+.social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.social-icon:hover {
+  transform: translateY(-2px);
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.3s ease;
+}
+
+.social-icon:hover .icon {
+  transform: scale(1.1);
+}
+
+/* LinkedIn */
+.social-icon:nth-child(1) .icon {
+  fill: #0077b5;
+}
+
+.social-icon:nth-child(1):hover {
+  background-color: rgba(0, 119, 181, 0.1);
+}
+
+/* GitHub */
+.social-icon:nth-child(2) .icon {
+  fill: #333;
+}
+
+.social-icon:nth-child(2):hover {
+  background-color: rgba(51, 51, 51, 0.1);
+}
+
+/* WhatsApp */
+.social-icon:nth-child(3) .icon {
+  fill: #25D366;
+}
+
+.social-icon:nth-child(3):hover {
+  background-color: rgba(37, 211, 102, 0.1);
+}
+
+.copyright p {
+  margin: 0;
+  color: #666;
+  font-size: 0.85em;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .social-links {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .social-icons {
+    gap: 15px;
+  }
+}

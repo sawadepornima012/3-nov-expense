@@ -1,0 +1,22 @@
+<div class="app-wrapper" [class.auth-mode]="!isAuthenticated">
+  @if (isAuthenticated) {
+    <app-sidebar [class.hidden]="isSidebarHidden"></app-sidebar>
+  }
+
+  <div class="main-section">
+    <!-- @if (isAuthenticated) {
+  <header class="app-header">
+  <button class="menu-btn" (click)="toggleSidebar()">☰</button>
+  <h2>{{ getPageTitle() }}</h2>
+  <button class="logout-btn" (click)="logout()">
+    <i class="fa fa-sign-out-alt"></i> Logout
+  </button>
+</header>
+
+    } -->
+
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

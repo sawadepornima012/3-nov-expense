@@ -1,0 +1,102 @@
+<div class="dashboard">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h2><i class="fa fa-chart-line"></i> Financial Overview</h2>
+      <p class="filter-display">Viewing data for: <strong>{{ getCurrentFilterDisplay() }}</strong></p>
+    </div>
+
+    <div class="simple-filter-section">
+      <div class="filter-group">
+        <label for="yearFilter">Year</label>
+        <select id="yearFilter" [(ngModel)]="selectedYear" (change)="onFilterChange()" class="filter-select">
+          <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="monthFilter">Month</label>
+        <select id="monthF
+        ilter" [(ngModel)]="selectedMonth" (change)="onFilterChange()" class="filter-select">
+          <option *ngFor="let month of availableMonths; let i = index" [value]="i + 1">{{ month }}</option>
+        </select>
+      </div>
+
+      <button class="btn-reset" (click)="resetFilters()">
+        <i class="fa fa-sync-alt reset-icon"></i> Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-icon income">
+        <i class="fa fa-wallet"></i>
+      </div>
+      <div class="summary-content">
+        <h3>Total Income</h3>
+        <p class="amount">₹{{ formatNumber(totalIncome, '1.2-2') }}</p>
+        <small>Monthly income</small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon expense">
+        <i class="fa fa-money-bill-wave"></i>
+      </div>
+      <div class="summary-content">
+        <h3>Total Expenses</h3>
+        <p class="amount">₹{{ formatNumber(totalExpenses, '1.2-2') }}</p>
+        <small>{{ categories.length > 0 ? 'From ' + getExpensesCount() + ' expenses' : 'Sample data' }}</small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon balance">
+        <i class="fa fa-balance-scale"></i>
+      </div>
+      <div class="summary-content">
+        <h3>Net Balance</h3>
+        <p class="amount" [class.positive]="netBalance >= 0" [class.negative]="netBalance < 0">
+          ₹{{ formatNumber(netBalance, '1.2-2') }}
+        </p>
+        <small>{{ netBalance >= 0 ? 'Surplus' : 'Deficit' }}</small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon completed">
+        <i class="fa fa-list-alt"></i>
+      </div>
+      <div class="summary-content">
+        <h3>Categories</h3>
+        <p class="count">{{ categories.length > 0 ? categories.length : '7' }}</p>
+        <small>Active categories</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Section -->
+  <div class="stats-grid">
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3><i class="fa fa-chart-bar"></i> Expense Distribution</h3>
+        <small>{{ getCurrentFilterDisplay() }}</small>
+      </div>
+      <div class="chart-container">
+        <canvas id="expenseBarChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3><i class="fa fa-chart-pie"></i> Expense Categories</h3>
+        <small>{{ getCurrentFilterDisplay() }}</small>
+      </div>
+      <div class="chart-container">
+        <canvas id="expensePieChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>

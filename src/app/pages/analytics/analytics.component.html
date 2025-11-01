@@ -1,0 +1,149 @@
+<div class="analytics">
+  <!-- Header Section -->
+  <div class="analytics-header">
+    <div class="header-content">
+      <h2><i class="fa fa-chart-line"></i> Expense Analytics</h2>
+      <p class="filter-display">Viewing data for: <strong>{{ getCurrentFilterDisplay() }}</strong></p>
+    </div>
+
+    <div class="simple-filter-section">
+      <div class="filter-group">
+        <label for="analyticsYearFilter"><i class="fa fa-calendar"></i> Year</label>
+        <select id="analyticsYearFilter" [(ngModel)]="selectedYear" (change)="onFilterChange()" class="filter-select">
+          <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="analyticsMonthFilter"><i class="fa fa-calendar-alt"></i> Month</label>
+        <select id="analyticsMonthFilter" [(ngModel)]="selectedMonth" (change)="onFilterChange()" class="filter-select">
+          <option *ngFor="let month of availableMonths; let i = index" [value]="i + 1">{{ month }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="categoryFilter"><i class="fa fa-tags"></i> Category</label>
+        <select id="categoryFilter" [(ngModel)]="selectedCategory" (change)="onFilterChange()" class="filter-select">
+          <option value="all">All Categories</option>
+          <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+        </select>
+      </div>
+
+      <button class="btn-reset" (click)="resetFilters()">
+        <i class="fa fa-undo"></i> Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-icon total"><i class="fa fa-chart-pie"></i></div>
+      <div class="summary-content">
+        <h3>Total Expenses</h3>
+        <p class="amount">₹{{ formatNumber(totalExpenses) }}</p>
+        <small [class.positive]="expenseChange >= 0" [class.negative]="expenseChange < 0">
+          {{ expenseChange >= 0 ? '+' : '' }}{{ expenseChange.toFixed(1) }}% from last month
+        </small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon monthly"><i class="fa fa-calendar-check"></i></div>
+      <div class="summary-content">
+        <h3>Monthly Expenses</h3>
+        <p class="amount">₹{{ formatNumber(currentMonthExpenses) }}</p>
+        <small [class.positive]="monthlyChange >= 0" [class.negative]="monthlyChange < 0">
+          {{ monthlyChange >= 0 ? '+' : '' }}{{ monthlyChange.toFixed(1) }}% from last month
+        </small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon categories"><i class="fa fa-list-alt"></i></div>
+      <div class="summary-content">
+        <h3>Expense Categories</h3>
+        <p class="count">{{ categories.length }}</p>
+        <small>Active categories</small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon pending"><i class="fa fa-hourglass-half"></i></div>
+      <div class="summary-content">
+        <h3>Pending Payments</h3>
+        <p class="count">{{ pendingPaymentsCount }}</p>
+        <small>Needs attention</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Grid -->
+  <div class="charts-grid">
+    <div class="card chart-card large">
+      <div class="card-header">
+        <h3><i class="fa fa-chart-bar"></i> Monthly Income vs Expenses</h3>
+        <small>{{ getCurrentFilterDisplay() }}</small>
+      </div>
+      <div class="chart-container">
+        <canvas #expenseBarChart id="expenseBarChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="card-header">
+        <h3><i class="fa fa-chart-pie"></i> Expense Distribution</h3>
+        <small>{{ getCurrentFilterDisplay() }}</small>
+      </div>
+      <div class="chart-container">
+        <canvas #expensePieChart id="expensePieChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insights Section -->
+  <div class="insights-section">
+    <h3><i class="fa fa-lightbulb"></i> Expense Insights</h3>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-icon"><i class="fa fa-wallet"></i></div>
+        <div class="insight-content">
+          <h4>Biggest Expense</h4>
+          <p class="insight-value">₹{{ formatNumber(largestExpense.amount) }}</p>
+          <p class="insight-detail">{{ getCategoryName(largestExpense.category) }}</p>
+        </div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-icon"><i class="fa fa-arrow-trend-up"></i></div>
+        <div class="insight-content">
+          <h4>Fastest Growing Category</h4>
+          <p class="insight-value">{{ fastestGrowingCategory.name }}</p>
+          <p class="insight-detail" [class.positive]="fastestGrowingCategory.growth > 0" [class.negative]="fastestGrowingCategory.growth < 0">
+            {{ fastestGrowingCategory.growth > 0 ? '+' : '' }}{{ fastestGrowingCategory.growth.toFixed(1) }}%
+          </p>
+        </div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-icon"><i class="fa fa-piggy-bank"></i></div>
+        <div class="insight-content">
+          <h4>Potential Savings</h4>
+          <p class="insight-value">₹{{ formatNumber(potentialSavings) }}</p>
+          <p class="insight-detail">Based on your spending patterns</p>
+        </div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-icon"><i class="fa fa-bullseye"></i></div>
+        <div class="insight-content">
+          <h4>Budget Status</h4>
+          <p class="insight-value" [class.over-budget]="isOverBudget">{{ budgetStatus }}</p>
+          <p class="insight-detail">
+            {{ budgetRemaining > 0 ? '₹' + formatNumber(budgetRemaining) + ' remaining' : '₹' + formatNumber(-budgetRemaining) + ' over budget' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
