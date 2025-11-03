@@ -6,6 +6,8 @@ import { AnalyticsComponent } from './pages/analytics/analytics.component';
 import { LoginComponent } from './pages/Auth/Login/login.component';
 import { RegisterComponent } from './pages/Auth/Register/register.component';
 import { inject } from '@angular/core';
+import { HelpCenterComponent } from './pages/help-center/help-center.component';
+import { SettingsComponent } from './pages/setting/setting.component';
 
 export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
@@ -23,6 +25,13 @@ export const routes: Routes = [
   {
     path: 'analytics',
     component: AnalyticsComponent,canActivate:[authGuard]
+  },
+  {
+    path : 'help-center',component:HelpCenterComponent,canActivate:[authGuard]
+  },
+
+  {
+    path:'setting',component:SettingsComponent,canActivate:[authGuard]
   },
   {
     path: '',

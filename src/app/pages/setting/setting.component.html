@@ -1,1 +1,82 @@
-<p>setting works!</p>
+<div class="settings-page">
+  <div class="page-header">
+    <h2><i class="fa fa-cog"></i> Settings</h2>
+    <p>Manage your account, preferences, and application settings.</p>
+  </div>
+
+  <div class="settings-container">
+    <!-- Profile Settings -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h3><i class="fa fa-user-circle"></i> Profile Settings</h3>
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="saveProfileSettings()">
+          <div class="form-group">
+            <label><i class="fa fa-user"></i> Name</label>
+            <input type="text" [(ngModel)]="profile.name" name="name" placeholder="Enter your name" />
+          </div>
+
+          <div class="form-group">
+            <label><i class="fa fa-envelope"></i> Email</label>
+            <input type="email" [(ngModel)]="profile.email" name="email" placeholder="Enter your email" />
+          </div>
+
+          <div class="form-group">
+            <label><i class="fa fa-lock"></i> Change Password</label>
+            <input type="password" [(ngModel)]="profile.password" name="password" placeholder="New password" />
+          </div>
+
+          <button type="submit" class="btn-primary">
+            <i class="fa fa-save"></i> Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Theme Settings -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h3><i class="fa fa-paint-brush"></i> Appearance</h3>
+      </div>
+      <div class="card-body">
+        <div class="theme-toggle">
+          <p>Switch between Light and Dark mode</p>
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="darkMode" (change)="toggleTheme()" />
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Preferences -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h3><i class="fa fa-sliders-h"></i> App Preferences</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label><i class="fa fa-bell"></i> Notifications</label>
+          <select [(ngModel)]="preferences.notifications">
+            <option value="all">All</option>
+            <option value="important">Only Important</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label><i class="fa fa-language"></i> Language</label>
+          <select [(ngModel)]="preferences.language">
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" (click)="savePreferences()">
+          <i class="fa fa-check"></i> Save Preferences
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

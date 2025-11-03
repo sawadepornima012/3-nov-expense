@@ -1,24 +1,28 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  AfterViewInit
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
-import { ExpenseService } from '../../services/expense.service';
 import { Subscription } from 'rxjs';
+import { ExpenseService } from '../../services/expense.service';
 
 // Register Chart.js components
 Chart.register(...registerables);
 
-// Interfaces
 interface Expense {
-  id?: number;        // <-- Make id optional
+  id?: number;
   amount: number;
   description: string;
   category: string;
   date: Date;
   isPending?: boolean;
 }
-
-
 
 interface Category {
   id: string;
@@ -53,31 +57,26 @@ interface LargestExpense {
   styleUrls: ['./analytics.component.scss']
 })
 export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
-  // Filter properties
   selectedYear: number = new Date().getFullYear();
   selectedMonth: number = new Date().getMonth() + 1;
   selectedCategory: string = 'all';
-  
-  // Available options
+
   availableYears: number[] = [2023, 2024, 2025];
   availableMonths: string[] = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  // Summary statistics
   totalExpenses: number = 0;
   currentMonthExpenses: number = 0;
   expenseChange: number = 0;
   monthlyChange: number = 0;
   pendingPaymentsCount: number = 0;
 
-  // Categories and data
   categories: Category[] = [];
   topExpenses: Expense[] = [];
   categorySpending: CategorySpending[] = [];
 
-  // Insights data
   largestExpense: LargestExpense = { amount: 0, category: '', description: '' };
   fastestGrowingCategory: GrowthCategory = { name: 'None', growth: 0 };
   potentialSavings: number = 0;
@@ -85,17 +84,14 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
   isOverBudget: boolean = false;
   budgetRemaining: number = 0;
 
-  // Chart references
   @ViewChild('expenseBarChart', { static: false }) barChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('expensePieChart', { static: false }) pieChartRef!: ElementRef<HTMLCanvasElement>;
   
   private barChart: Chart | null = null;
   private pieChart: Chart | null = null;
-
   private allExpenses: Expense[] = [];
   private expenseSub!: Subscription;
 
-  // Predefined categories
   private allCategories: Category[] = [
     { id: 'food', name: 'Food & Dining', color: '#FF6B6B' },
     { id: 'utilities', name: 'Utilities', color: '#4ECDC4' },
@@ -112,43 +108,37 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadExpensesFromBackend();
   }
 
-  ngAfterViewInit(): void {
-    // Chart will be initialized after data loads
-  }
+  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
-    if (this.barChart) this.barChart.destroy();
-    if (this.pieChart) this.pieChart.destroy();
-    if (this.expenseSub) this.expenseSub.unsubscribe();
+    this.barChart?.destroy();
+    this.pieChart?.destroy();
+    this.expenseSub?.unsubscribe();
   }
 
-  /** Load data from backend **/
+  /** Load all expenses from backend **/
   private loadExpensesFromBackend(): void {
     this.expenseSub = this.expenseService.getAll().subscribe({
       next: (data) => {
-       this.allExpenses = data.map(exp => ({
-  ...exp,
-  description: exp.description ?? '', // ensure it's always a string
-  date: new Date(exp.date) // if it's string, convert to Date for charts
-}));
-
+        this.allExpenses = data.map(exp => ({
+          ...exp,
+          description: exp.description ?? '',
+          date: new Date(exp.date)
+        }));
         this.categories = this.allCategories;
         this.calculateStatistics();
-        setTimeout(() => this.initializeCharts(), 200);
+        setTimeout(() => this.initializeCharts(), 300);
       },
-      error: (err) => {
-        console.error('Failed to load expenses:', err);
-      }
+      error: (err) => console.error('Failed to load expenses:', err)
     });
   }
 
-  // Filter change handler
+  /** Filters **/
   onFilterChange(): void {
     this.calculateStatistics();
     this.updateCharts();
   }
 
-  // Reset all filters
   resetFilters(): void {
     this.selectedYear = new Date().getFullYear();
     this.selectedMonth = new Date().getMonth() + 1;
@@ -165,7 +155,7 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
     return `${monthName} ${this.selectedYear} • ${categoryName}`;
   }
 
-  /** CALCULATION LOGIC **/
+  /** ---- STATS CALCULATIONS ---- **/
   private calculateStatistics(): void {
     const filteredExpenses = this.getFilteredExpenses();
     this.calculateSummaryStats(filteredExpenses);
@@ -175,17 +165,18 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getFilteredExpenses(): Expense[] {
-    return this.allExpenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
-      const yearMatch = expenseDate.getFullYear() === this.selectedYear;
-      const monthMatch = expenseDate.getMonth() + 1 === this.selectedMonth;
-      const categoryMatch = this.selectedCategory === 'all' || expense.category === this.selectedCategory;
-      return yearMatch && monthMatch && categoryMatch;
+    return this.allExpenses.filter(exp => {
+      const expDate = new Date(exp.date);
+      return (
+        expDate.getFullYear() === this.selectedYear &&
+        expDate.getMonth() + 1 === this.selectedMonth &&
+        (this.selectedCategory === 'all' || exp.category === this.selectedCategory)
+      );
     });
   }
 
   private calculateSummaryStats(expenses: Expense[]): void {
-    this.totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    this.totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
     this.currentMonthExpenses = this.totalExpenses;
     this.expenseChange = (Math.random() * 20 - 10);
     this.monthlyChange = (Math.random() * 30 - 15);
@@ -193,38 +184,35 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private calculateTopExpenses(expenses: Expense[]): void {
-    this.topExpenses = expenses.sort((a, b) => b.amount - a.amount).slice(0, 5);
+    this.topExpenses = [...expenses].sort((a, b) => b.amount - a.amount).slice(0, 5);
   }
 
   private calculateCategorySpending(expenses: Expense[]): void {
-    const categoryMap = new Map<string, number>();
-    this.categories.forEach(cat => categoryMap.set(cat.id, 0));
+    const catMap = new Map<string, number>();
+    this.categories.forEach(c => catMap.set(c.id, 0));
     expenses.forEach(exp => {
-      const current = categoryMap.get(exp.category) || 0;
-      categoryMap.set(exp.category, current + exp.amount);
+      const current = catMap.get(exp.category) || 0;
+      catMap.set(exp.category, current + exp.amount);
     });
-    const total = Array.from(categoryMap.values()).reduce((s, a) => s + a, 0);
-    this.categorySpending = Array.from(categoryMap.entries())
+    const total = Array.from(catMap.values()).reduce((a, b) => a + b, 0);
+    this.categorySpending = Array.from(catMap.entries())
       .map(([id, amount]) => {
         const cat = this.categories.find(c => c.id === id);
-        const percentage = total > 0 ? (amount / total) * 100 : 0;
-        return {
-          name: cat?.name || 'Unknown',
-          amount,
-          percentage,
-          color: cat?.color || '#CCC'
-        };
+        const percent = total ? (amount / total) * 100 : 0;
+        return { name: cat?.name || 'Unknown', amount, percentage: percent, color: cat?.color || '#CCC' };
       })
-      .filter(item => item.amount > 0)
+      .filter(c => c.amount > 0)
       .sort((a, b) => b.amount - a.amount);
   }
 
   private calculateInsights(expenses: Expense[]): void {
-    const largest = expenses.reduce((max, e) => e.amount > max.amount ? e : max, { amount: 0, category: '', description: '' } as LargestExpense);
-    this.largestExpense = largest;
-    const cats = ['Food & Dining', 'Entertainment', 'Shopping', 'Transportation'];
+    this.largestExpense = expenses.reduce(
+      (max, e) => (e.amount > max.amount ? e : max),
+      { amount: 0, category: '', description: '' } as LargestExpense
+    );
+    const randomCats = ['Food & Dining', 'Entertainment', 'Shopping', 'Transportation'];
     this.fastestGrowingCategory = {
-      name: cats[Math.floor(Math.random() * cats.length)],
+      name: randomCats[Math.floor(Math.random() * randomCats.length)],
       growth: (Math.random() * 50 - 10)
     };
     this.potentialSavings = this.totalExpenses * 0.1;
@@ -234,91 +222,69 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.budgetStatus = this.isOverBudget ? 'Over Budget' : 'On Track';
   }
 
-  /** CHART LOGIC **/
+  /** ---- CHARTS ---- **/
   private initializeCharts(): void {
     this.createBarChart();
     this.createPieChart();
   }
 
   private createBarChart(): void {
-    if (!this.barChartRef?.nativeElement) return;
-    const ctx = this.barChartRef.nativeElement.getContext('2d');
+    const ctx = this.barChartRef?.nativeElement.getContext('2d');
     if (!ctx) return;
-    if (this.barChart) this.barChart.destroy();
+    this.barChart?.destroy();
 
-    const months = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    const incomeData = [65000, 72000, 68000, 75000];
-    const expenseData = [this.currentMonthExpenses * 0.2, this.currentMonthExpenses * 0.3, this.currentMonthExpenses * 0.25, this.currentMonthExpenses * 0.25];
+    const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+    const income = [65000, 72000, 68000, 75000];
+    const expense = [this.currentMonthExpenses * 0.2, this.currentMonthExpenses * 0.3, this.currentMonthExpenses * 0.25, this.currentMonthExpenses * 0.25];
 
     this.barChart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: months,
+        labels: weeks,
         datasets: [
-          { label: 'Income', data: incomeData, backgroundColor: '#48BB78', borderColor: '#48BB78', borderWidth: 1, borderRadius: 4, barPercentage: 0.6 },
-          { label: 'Expenses', data: expenseData, backgroundColor: '#F56565', borderColor: '#F56565', borderWidth: 1, borderRadius: 4, barPercentage: 0.6 }
+          { label: 'Income', data: income, backgroundColor: '#4ECDC4', borderRadius: 6 },
+          { label: 'Expenses', data: expense, backgroundColor: '#FF6B6B', borderRadius: 6 }
         ]
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
-        scales: { y: { beginAtZero: true } },
-        interaction: { mode: 'index', intersect: false }
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
       }
     });
   }
 
   private createPieChart(): void {
-    if (!this.pieChartRef?.nativeElement) return;
-    const ctx = this.pieChartRef.nativeElement.getContext('2d');
+    const ctx = this.pieChartRef?.nativeElement.getContext('2d');
     if (!ctx) return;
-    if (this.pieChart) this.pieChart.destroy();
+    this.pieChart?.destroy();
 
-    const labels = this.categorySpending.map(i => i.name);
-    const data = this.categorySpending.map(i => i.amount);
-    const colors = this.categorySpending.map(i => i.color);
+    const labels = this.categorySpending.map(c => c.name);
+    const data = this.categorySpending.map(c => c.amount);
+    const colors = this.categorySpending.map(c => c.color);
 
     this.pieChart = new Chart(ctx, {
       type: 'doughnut',
-      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2 }] },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'bottom' },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = context.parsed;
-                const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-                const percent = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                return `${label}: ₹${this.formatNumber(value ?? 0)} (${percent}%)`;
-              }
-            }
-          }
-        },
-        cutout: '65%',
-        animation: { animateScale: true, animateRotate: true }
+        plugins: { legend: { position: 'bottom' } },
+        cutout: '60%'
       }
     });
   }
 
   private updateCharts(): void {
     if (this.barChart) {
-      const expenseData = [this.currentMonthExpenses * 0.2, this.currentMonthExpenses * 0.3, this.currentMonthExpenses * 0.25, this.currentMonthExpenses * 0.25];
-      this.barChart.data.datasets[1].data = expenseData;
-      this.barChart.update('none');
+      const newExpenses = [this.currentMonthExpenses * 0.2, this.currentMonthExpenses * 0.3, this.currentMonthExpenses * 0.25, this.currentMonthExpenses * 0.25];
+      this.barChart.data.datasets[1].data = newExpenses;
+      this.barChart.update();
     }
-    if (this.pieChart && this.categorySpending.length > 0) {
-      const labels = this.categorySpending.map(i => i.name);
-      const data = this.categorySpending.map(i => i.amount);
-      const colors = this.categorySpending.map(i => i.color);
-      this.pieChart.data.labels = labels;
-      this.pieChart.data.datasets[0].data = data;
-      this.pieChart.data.datasets[0].backgroundColor = colors;
-      this.pieChart.update('none');
+    if (this.pieChart) {
+      this.pieChart.data.labels = this.categorySpending.map(c => c.name);
+      this.pieChart.data.datasets[0].data = this.categorySpending.map(c => c.amount);
+      this.pieChart.data.datasets[0].backgroundColor = this.categorySpending.map(c => c.color);
+      this.pieChart.update();
     }
   }
 
@@ -327,18 +293,9 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.categories.find(c => c.id === id)?.name || 'Unknown';
   }
 
-  getCategoryColor(id: string): string {
-    return this.categories.find(c => c.id === id)?.color || '#CCC';
-  }
-
   formatNumber(value: number): string {
-    if (!value && value !== 0) return '0';
     if (value >= 100000) return (value / 100000).toFixed(1) + 'L';
     if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
     return value.toLocaleString('en-IN');
-  }
-
-  formatDisplayDate(date: Date): string {
-    return new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
   }
 }

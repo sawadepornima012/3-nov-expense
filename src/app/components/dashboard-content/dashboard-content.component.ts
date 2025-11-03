@@ -1,9 +1,10 @@
-// src/app/components/dashboard-content/dashboard-content.component.ts
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { Router } from '@angular/router';
+import { ExpenseService } from '../../services/expense.service';
+import { Expense } from '../../models/expense.model';
 
 @Component({
   selector: 'app-dashboard-content',
@@ -13,35 +14,32 @@ import { Router } from '@angular/router';
   styleUrls: ['./dashboard-content.component.scss']
 })
 export class DashboardContentComponent implements OnInit, AfterViewInit, OnDestroy {
-  // Chart instances
   private expenseBarChart: Chart | null = null;
   private expensePieChart: Chart | null = null;
   private chartsInitialized = false;
 
-  // Filter properties
+  // Filters
   selectedYear: number = new Date().getFullYear();
   selectedMonth: number = new Date().getMonth() + 1;
-  
-  // Sample data
+
   availableYears: number[] = [2023, 2024, 2025];
   availableMonths: string[] = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  // Summary data
-  totalIncome: number = 75000;
-  totalExpenses: number = 45000;
-  netBalance: number = 30000;
-  categories: any[] = [];
+  // Dashboard stats
+  totalIncome = 0;
+  totalExpenses = 0;
+  netBalance = 0;
+  categories: string[] = [];
 
- 
-   
-  
+  // Expense list
+  allExpenses: Expense[] = [];
+  filteredExpenses: Expense[] = [];
 
- 
-  constructor(private router: Router) {
-     Chart.register(...registerables);
+  constructor(private router: Router, private expenseService: ExpenseService) {
+    Chart.register(...registerables);
   }
 
   ngOnInit() {
@@ -49,29 +47,54 @@ export class DashboardContentComponent implements OnInit, AfterViewInit, OnDestr
     if (!user) {
       this.router.navigate(['/login']);
     }
+
+    this.loadExpenses();
   }
 
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.initCharts();
-    }, 100);
+    }, 300);
   }
 
   ngOnDestroy(): void {
     this.destroyCharts();
   }
 
-  // Filter methods
-  onFilterChange(): void {
-    this.loadDashboardData();
+  /** 🔹 Load all expenses from backend */
+  loadExpenses(): void {
+    this.expenseService.getAll().subscribe({
+      next: (data) => {
+        this.allExpenses = data;
+        this.applyFilter();
+      },
+      error: (err) => console.error('Error loading expenses:', err)
+    });
+  }
+
+  /** 🔹 Filter data based on selected month/year */
+  applyFilter(): void {
+    this.filteredExpenses = this.allExpenses.filter((exp) => {
+      const date = new Date(exp.date);
+      return (
+        date.getFullYear() === this.selectedYear &&
+        date.getMonth() + 1 === this.selectedMonth
+      );
+    });
+
+    this.calculateSummaryData();
     this.refreshCharts();
   }
 
+  onFilterChange(): void {
+    this.applyFilter();
+  }
+
   resetFilters(): void {
-    const currentDate = new Date();
-    this.selectedYear = currentDate.getFullYear();
-    this.selectedMonth = currentDate.getMonth() + 1;
-    this.onFilterChange();
+    const current = new Date();
+    this.selectedYear = current.getFullYear();
+    this.selectedMonth = current.getMonth() + 1;
+    this.applyFilter();
   }
 
   getCurrentFilterDisplay(): string {
@@ -79,72 +102,60 @@ export class DashboardContentComponent implements OnInit, AfterViewInit, OnDestr
     return `${monthName} ${this.selectedYear}`;
   }
 
-  // Data loading methods
-  loadDashboardData(): void {
-    this.calculateSummaryData();
-  }
-
+  /** 🔹 Calculate totals */
   calculateSummaryData(): void {
-    // Sample calculations
-    this.totalIncome = 75000 + (Math.random() * 10000);
-    this.totalExpenses = 45000 + (Math.random() * 5000);
+    const incomeItems = this.filteredExpenses.filter(e => e.type === 'income');
+    const expenseItems = this.filteredExpenses.filter(e => e.type === 'expense');
+
+    this.totalIncome = incomeItems.reduce((sum, e) => sum + e.amount, 0);
+    this.totalExpenses = expenseItems.reduce((sum, e) => sum + e.amount, 0);
     this.netBalance = this.totalIncome - this.totalExpenses;
+
+    // Unique categories for active month
+    this.categories = [...new Set(this.filteredExpenses.map(e => e.category))];
   }
 
   getExpensesCount(): number {
-    return 15;
+    return this.filteredExpenses.length;
   }
 
-  // Chart methods
+  /** 🔹 Chart initialization */
   initCharts(): void {
-    if (this.chartsInitialized) {
-      return;
-    }
+    if (this.chartsInitialized) return;
 
     this.destroyCharts();
-
-    try {
-      this.initExpenseBarChart();
-      this.initExpensePieChart();
-      this.chartsInitialized = true;
-    } catch (error) {
-      console.error('Error initializing charts:', error);
-      setTimeout(() => this.initCharts(), 500);
-    }
+    this.initExpenseBarChart();
+    this.initExpensePieChart();
+    this.chartsInitialized = true;
   }
 
+  /** 🔹 Bar Chart: Income vs Expense (monthly trend) */
   initExpenseBarChart(): void {
     const canvas = document.getElementById('expenseBarChart') as HTMLCanvasElement;
-    
-    if (!canvas) {
-      console.warn('expenseBarChart canvas not found');
-      return;
-    }
-
-    const existingChart = Chart.getChart(canvas);
-    if (existingChart) {
-      existingChart.destroy();
-    }
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.error('Could not get 2D context for expenseBarChart');
-      return;
-    }
+    if (!ctx) return;
 
-    // Sample data for bar chart
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const expenseData = [12000, 19000, 15000, 25000, 22000, 30000];
-    const incomeData = [20000, 25000, 22000, 30000, 28000, 35000];
+    // Group expenses by month
+    const monthlyIncome = Array(12).fill(0);
+    const monthlyExpenses = Array(12).fill(0);
+
+    this.allExpenses.forEach(exp => {
+      const d = new Date(exp.date);
+      const month = d.getMonth();
+      if (exp.type === 'income') monthlyIncome[month] += exp.amount;
+      if (exp.type === 'expense') monthlyExpenses[month] += exp.amount;
+    });
 
     this.expenseBarChart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: months,
+        labels: this.availableMonths.map(m => m.substring(0, 3)),
         datasets: [
           {
             label: 'Income',
-            data: incomeData,
+            data: monthlyIncome,
             backgroundColor: 'rgba(34, 197, 94, 0.8)',
             borderColor: 'rgba(34, 197, 94, 1)',
             borderWidth: 1,
@@ -152,7 +163,7 @@ export class DashboardContentComponent implements OnInit, AfterViewInit, OnDestr
           },
           {
             label: 'Expenses',
-            data: expenseData,
+            data: monthlyExpenses,
             backgroundColor: 'rgba(239, 68, 68, 0.8)',
             borderColor: 'rgba(239, 68, 68, 1)',
             borderWidth: 1,
@@ -164,76 +175,44 @@ export class DashboardContentComponent implements OnInit, AfterViewInit, OnDestr
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            display: true,
-            position: 'top'
-          },
+          legend: { position: 'top' },
           tooltip: {
             callbacks: {
-              label: (context) => {
-                // FIXED: Added null check for context.parsed.y
-                const value = context.parsed.y ?? 0;
-                return `${context.dataset.label}: ₹${value.toLocaleString()}`;
-              }
+label: (context) => {
+  const value = context.parsed?.y ?? 0;
+  return `${context.dataset.label}: ₹${value.toLocaleString()}`;
+}
             }
           }
         },
         scales: {
           y: {
             beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                return '₹' + value.toLocaleString();
-              }
-            },
-            grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            }
+            ticks: { callback: (value) => '₹' + value.toLocaleString() }
           },
-          x: {
-            grid: {
-              display: false
-            }
-          }
-        },
-        interaction: {
-          intersect: false,
-          mode: 'index'
+          x: { grid: { display: false } }
         }
       }
     });
   }
 
+  /** 🔹 Pie Chart: Expense by category */
   initExpensePieChart(): void {
     const canvas = document.getElementById('expensePieChart') as HTMLCanvasElement;
-    
-    if (!canvas) {
-      console.warn('expensePieChart canvas not found');
-      return;
-    }
-
-    const existingChart = Chart.getChart(canvas);
-    if (existingChart) {
-      existingChart.destroy();
-    }
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.error('Could not get 2D context for expensePieChart');
-      return;
-    }
+    if (!ctx) return;
 
-    // Sample data for pie chart
-    const categories = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Healthcare'];
-    const amounts = [8000, 6000, 4000, 7000, 5000, 3000];
-    const backgroundColors = [
-      'rgba(59, 130, 246, 0.8)',   // Blue
-      'rgba(16, 185, 129, 0.8)',   // Green
-      'rgba(245, 158, 11, 0.8)',   // Amber
-      'rgba(139, 92, 246, 0.8)',   // Purple
-      'rgba(236, 72, 153, 0.8)',   // Pink
-      'rgba(20, 184, 166, 0.8)'    // Teal
-    ];
+    const categoryTotals: { [key: string]: number } = {};
+    this.filteredExpenses
+      .filter(e => e.type === 'expense')
+      .forEach(exp => {
+        categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+      });
+
+    const categories = Object.keys(categoryTotals);
+    const amounts = Object.values(categoryTotals);
 
     this.expensePieChart = new Chart(ctx, {
       type: 'pie',
@@ -241,36 +220,32 @@ export class DashboardContentComponent implements OnInit, AfterViewInit, OnDestr
         labels: categories,
         datasets: [{
           data: amounts,
-          backgroundColor: backgroundColors,
+          backgroundColor: [
+            'rgba(59,130,246,0.8)', 'rgba(16,185,129,0.8)',
+            'rgba(245,158,11,0.8)', 'rgba(139,92,246,0.8)',
+            'rgba(236,72,153,0.8)', 'rgba(20,184,166,0.8)',
+            'rgba(249,115,22,0.8)', 'rgba(52,211,153,0.8)'
+          ],
           borderWidth: 2,
-          borderColor: '#ffffff'
+          borderColor: '#fff'
         }]
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: 'right',
-            labels: {
-              padding: 20,
-              usePointStyle: true,
-              pointStyle: 'circle'
-            }
-          },
+          legend: { position: 'right' },
           tooltip: {
             callbacks: {
               label: (context) => {
                 const label = context.label || '';
-                const value = context.parsed ?? 0;
-                const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                const value = context.parsed || 0;
+                const total = amounts.reduce((a, b) => a + b, 0);
                 const percentage = Math.round((value / total) * 100);
                 return `${label}: ₹${value.toLocaleString()} (${percentage}%)`;
               }
             }
           }
-        },
-        cutout: '0%'
+        }
       }
     });
   }
@@ -289,16 +264,11 @@ export class DashboardContentComponent implements OnInit, AfterViewInit, OnDestr
 
   refreshCharts(): void {
     this.destroyCharts();
-    setTimeout(() => {
-      this.initCharts();
-    }, 100);
+    setTimeout(() => this.initCharts(), 200);
   }
 
-  // Utility methods
   formatNumber(value: number, format: string = '1.2-2'): string {
-    if (format === '1.2-2') {
-      return value.toFixed(2);
-    }
+    if (format === '1.2-2') return value.toFixed(2);
     return value.toString();
   }
 }

@@ -1,1 +1,67 @@
-<p>help-center works!</p>
+<div class="help-center-page">
+  <!-- Header -->
+  <div class="page-header">
+    <h2><i class="fa fa-question-circle"></i> Help Center</h2>
+    <p>Find answers, troubleshooting tips, and ways to contact support.</p>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="help-search">
+    <input
+      type="text"
+      placeholder="🔍 Search for help topics..."
+      [(ngModel)]="searchQuery"
+      (input)="filterFAQs()"
+    />
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="faq-section">
+    <h3><i class="fa fa-lightbulb"></i> Frequently Asked Questions</h3>
+
+    <div
+      class="faq-item"
+      *ngFor="let faq of filteredFAQs; let i = index"
+      (click)="toggleFAQ(i)"
+    >
+      <div class="faq-question">
+        <i class="fa" [ngClass]="{'fa-chevron-down': openFAQ !== i, 'fa-chevron-up': openFAQ === i}"></i>
+        <span>{{ faq.question }}</span>
+      </div>
+      <div class="faq-answer" *ngIf="openFAQ === i">
+        <p>{{ faq.answer }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="filteredFAQs.length === 0" class="no-results">
+      <i class="fa fa-info-circle"></i> No matching results found.
+    </div>
+  </div>
+
+  <!-- Contact Support -->
+  <div class="contact-section">
+    <h3><i class="fa fa-headset"></i> Contact Support</h3>
+    <p>Still need help? Get in touch with our support team.</p>
+
+    <form (ngSubmit)="sendSupportMessage()">
+      <div class="form-group">
+        <label><i class="fa fa-user"></i> Name</label>
+        <input type="text" [(ngModel)]="supportForm.name" name="name" placeholder="Enter your name" required />
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa fa-envelope"></i> Email</label>
+        <input type="email" [(ngModel)]="supportForm.email" name="email" placeholder="Enter your email" required />
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa fa-comment-dots"></i> Message</label>
+        <textarea [(ngModel)]="supportForm.message" name="message" rows="4" placeholder="Describe your issue..." required></textarea>
+      </div>
+
+      <button type="submit" class="btn-primary">
+        <i class="fa fa-paper-plane"></i> Send Message
+      </button>
+    </form>
+  </div>
+</div>

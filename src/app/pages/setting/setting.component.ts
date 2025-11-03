@@ -1,30 +1,41 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="page-container">
-      <h2>Settings</h2>
-      <p>Configure your application settings and preferences.</p>
-      
-      <div class="card">
-        <h3>Account Settings</h3>
-        <p>Manage your account preferences and security settings.</p>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .page-container { padding: 20px; }
-    .card { 
-      background: white; 
-      padding: 20px; 
-      border-radius: 10px; 
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-top: 20px;
-    }
-  `]
+  imports: [CommonModule, FormsModule],
+  templateUrl: './setting.component.html',
+  styleUrls: ['./setting.component.scss']
 })
-export class SettingsComponent {}
+export class SettingsComponent {
+  profile = {
+    name: 'Dezykode',
+    email: 'dezykode@example.com',
+    password: ''
+  };
+
+  darkMode = false;
+
+  preferences = {
+    notifications: 'all',
+    language: 'en'
+  };
+
+  saveProfileSettings() {
+    alert('✅ Profile settings saved successfully!');
+    console.log('Profile:', this.profile);
+  }
+
+  toggleTheme() {
+    this.darkMode = !this.darkMode;
+    document.body.classList.toggle('dark-theme', this.darkMode);
+    alert(`🌙 Theme changed to ${this.darkMode ? 'Dark' : 'Light'} mode`);
+  }
+
+  savePreferences() {
+    alert('⚙️ Preferences saved successfully!');
+    console.log('Preferences:', this.preferences);
+  }
+}
