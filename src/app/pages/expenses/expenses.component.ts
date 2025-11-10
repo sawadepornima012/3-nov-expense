@@ -13,6 +13,113 @@ import { ExpenseService } from '../../services/expense.service';
   styleUrls: ['./expenses.component.scss']
 })
 export class ExpensesComponent implements OnInit {
+// inside class ExpensesComponent
+
+formIncomeSource = '';
+formIncomeDate = '';
+
+onTypeChange(): void {
+  // Reset income-specific fields when type changes
+  if (this.formType !== 'income') {
+    this.formIncomeSource = '';
+    this.formIncomeDate = '';
+  }
+}
+
+saveExpense(): void {
+  if (!this.isFormValid()) {
+    alert('Please fill all required fields');
+    return;
+  }
+
+ const expenseData: Expense = {
+  title: this.formTitle,
+  description: this.formDescription,
+  category: this.formCategory,
+  amount: Number(this.formAmount || 0),
+  type: this.formType as 'expense' | 'income',
+  date: this.formDate || this.getTodayDate(),
+  paymentMode: this.formPaymentMode as 'Cash' | 'UPI' | 'Credit' | 'Debit',
+  upiProvider: this.formPaymentMode === 'UPI' ? this.formUpiProvider : undefined,
+  bank: (this.formPaymentMode === 'UPI' || this.formPaymentMode === 'Credit') ? this.formBank : undefined,
+};
+
+
+  // Add income-specific fields if applicable
+  if (this.formType === 'income') {
+    (expenseData as any).incomeSource = this.formIncomeSource;
+    (expenseData as any).incomeDate = this.formIncomeDate;
+  }
+
+  // ✅ same logic for update/create
+  if (this.editingExpense && this.editingExpense.id !== undefined) {
+    this.expenseService.update(Number(this.editingExpense.id), expenseData).subscribe({
+      next: (updated) => {
+        const idx = this.expenses.findIndex(e => e.id === this.editingExpense?.id);
+        if (idx !== -1) this.expenses[idx] = { ...updated } as Expense;
+        this.applyFilters();
+        this.closeModal();
+        alert('Expense updated successfully!');
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Update failed');
+      }
+    });
+  } else {
+    this.expenseService.create(expenseData).subscribe({
+      next: (created) => {
+        this.expenses.unshift(created as Expense);
+        this.applyFilters();
+        this.closeModal();
+        alert('Expense created successfully!');
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Create failed');
+      }
+    });
+  }
+}
+
+isFormValid(): boolean {
+  let isValid = !!this.formTitle &&
+    !!this.formCategory &&
+    this.formAmount !== null &&
+    this.formAmount > 0 &&
+    !!this.formType &&
+    !!this.formPaymentMode;
+
+  if (this.formPaymentMode === 'UPI') {
+    isValid = isValid && !!this.formUpiProvider && !!this.formBank;
+  }
+
+  if (this.formPaymentMode === 'Credit') {
+    isValid = isValid && !!this.formBank;
+  }
+
+  // ✅ validate income-specific fields
+  if (this.formType === 'income') {
+    isValid = isValid && !!this.formIncomeSource && !!this.formIncomeDate;
+  }
+
+  return isValid;
+}
+
+resetForm(): void {
+  this.formTitle = '';
+  this.formDescription = '';
+  this.formCategory = '';
+  this.formAmount = null;
+  this.formType = 'expense';
+  this.formDate = '';
+  this.formPaymentMode = '';
+  this.formUpiProvider = '';
+  this.formBank = '';
+  this.formIncomeSource = '';
+  this.formIncomeDate = '';
+  this.editingExpense = null;
+}
 
   constructor(private expenseService: ExpenseService) {}
 
@@ -111,56 +218,56 @@ export class ExpensesComponent implements OnInit {
     this.showAddForm = true;
   }
 
-  saveExpense(): void {
-    if (!this.isFormValid()) {
-      alert('Please fill all required fields');
-      return;
-    }
+  // saveExpense(): void {
+  //   if (!this.isFormValid()) {
+  //     alert('Please fill all required fields');
+  //     return;
+  //   }
 
-    const expenseData: Expense = {
-      title: this.formTitle,
-      description: this.formDescription,
-      category: this.formCategory,
-      amount: Number(this.formAmount || 0),
-      type: this.formType as 'expense' | 'income',
-      date: this.formDate || this.getTodayDate(),
-      paymentMode: this.formPaymentMode,
-      upiProvider: this.formPaymentMode === 'UPI' ? this.formUpiProvider : undefined,
-      bank: (this.formPaymentMode === 'UPI' || this.formPaymentMode === 'Credit') ? this.formBank : undefined
-    };
+  //   const expenseData: Expense = {
+  //     title: this.formTitle,
+  //     description: this.formDescription,
+  //     category: this.formCategory,
+  //     amount: Number(this.formAmount || 0),
+  //     type: this.formType as 'expense' | 'income',
+  //     date: this.formDate || this.getTodayDate(),
+  //     paymentMode: this.formPaymentMode,
+  //     upiProvider: this.formPaymentMode === 'UPI' ? this.formUpiProvider : undefined,
+  //     bank: (this.formPaymentMode === 'UPI' || this.formPaymentMode === 'Credit') ? this.formBank : undefined
+  //   };
 
-    // ✅ convert id to number if needed
-    if (this.editingExpense && this.editingExpense.id !== undefined) {
-      this.expenseService.update(Number(this.editingExpense.id), expenseData).subscribe({
-        next: (updated) => {
-          const idx = this.expenses.findIndex(e => e.id === this.editingExpense?.id);
-          if (idx !== -1) {
-            this.expenses[idx] = { ...updated } as Expense;
-          }
-          this.applyFilters();
-          this.closeModal();
-          alert('Expense updated successfully!');
-        },
-        error: (err) => {
-          console.error(err);
-          alert('Update failed');
-        }
-      });
-    } else {
-      this.expenseService.create(expenseData).subscribe({
-        next: (created) => {
-          this.expenses.unshift(created as Expense);
-          this.applyFilters();
-          this.closeModal();
-          alert('Expense created successfully!');
-        },
-        error: (err) => {
-          console.error(err);
-          alert('Create failed');
-        }
-      });
-    }
-  }
+  //   // ✅ convert id to number if needed
+  //   if (this.editingExpense && this.editingExpense.id !== undefined) {
+  //     this.expenseService.update(Number(this.editingExpense.id), expenseData).subscribe({
+  //       next: (updated) => {
+  //         const idx = this.expenses.findIndex(e => e.id === this.editingExpense?.id);
+  //         if (idx !== -1) {
+  //           this.expenses[idx] = { ...updated } as Expense;
+  //         }
+  //         this.applyFilters();
+  //         this.closeModal();
+  //         alert('Expense updated successfully!');
+  //       },
+  //       error: (err) => {
+  //         console.error(err);
+  //         alert('Update failed');
+  //       }
+  //     });
+  //   } else {
+  //     this.expenseService.create(expenseData).subscribe({
+  //       next: (created) => {
+  //         this.expenses.unshift(created as Expense);
+  //         this.applyFilters();
+  //         this.closeModal();
+  //         alert('Expense created successfully!');
+  //       },
+  //       error: (err) => {
+  //         console.error(err);
+  //         alert('Create failed');
+  //       }
+  //     });
+  //   }
+  // }
 
   onPaymentModeChange(): void {
     // Reset conditional fields when payment mode changes
@@ -209,39 +316,39 @@ export class ExpensesComponent implements OnInit {
     this.resetForm();
   }
 
-  resetForm(): void {
-    this.formTitle = '';
-    this.formDescription = '';
-    this.formCategory = '';
-    this.formAmount = null;
-    this.formType = 'expense';
-    this.formDate = '';
-    this.formPaymentMode = '';
-    this.formUpiProvider = '';
-    this.formBank = '';
-    this.editingExpense = null;
-  }
+  // resetForm(): void {
+  //   this.formTitle = '';
+  //   this.formDescription = '';
+  //   this.formCategory = '';
+  //   this.formAmount = null;
+  //   this.formType = 'expense';
+  //   this.formDate = '';
+  //   this.formPaymentMode = '';
+  //   this.formUpiProvider = '';
+  //   this.formBank = '';
+  //   this.editingExpense = null;
+  // }
 
-  isFormValid(): boolean {
-    let isValid = !!this.formTitle &&
-           !!this.formCategory &&
-           this.formAmount !== null &&
-           this.formAmount > 0 &&
-           !!this.formType &&
-           !!this.formPaymentMode;
+  // isFormValid(): boolean {
+  //   let isValid = !!this.formTitle &&
+  //          !!this.formCategory &&
+  //          this.formAmount !== null &&
+  //          this.formAmount > 0 &&
+  //          !!this.formType &&
+  //          !!this.formPaymentMode;
 
-    // Additional validation for UPI payments
-    if (this.formPaymentMode === 'UPI') {
-      isValid = isValid && !!this.formUpiProvider && !!this.formBank;
-    }
+  //   // Additional validation for UPI payments
+  //   if (this.formPaymentMode === 'UPI') {
+  //     isValid = isValid && !!this.formUpiProvider && !!this.formBank;
+  //   }
 
-    // Additional validation for Credit payments
-    if (this.formPaymentMode === 'Credit') {
-      isValid = isValid && !!this.formBank;
-    }
+  //   // Additional validation for Credit payments
+  //   if (this.formPaymentMode === 'Credit') {
+  //     isValid = isValid && !!this.formBank;
+  //   }
 
-    return isValid;
-  }
+  //   return isValid;
+  // }
 
   applyFilters(): void {
     this.filteredExpenses = this.expenses.filter(expense => {

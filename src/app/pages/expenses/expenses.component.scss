@@ -573,3 +573,172 @@
     flex-direction: column;
   }
 }
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Modal Content */
+.modal-content {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: slideDown 0.3s ease-in-out;
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #ef4444; // red hover
+    }
+  }
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 16px 24px;
+
+  p {
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+    color: #374151;
+  }
+
+  .expense-details {
+    background: #f9fafb;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+
+    p {
+      margin: 4px 0;
+      font-size: 0.9rem;
+
+      strong {
+        color: #111827;
+      }
+
+      span {
+        color: #4b5563;
+      }
+    }
+  }
+
+  .warning-text {
+    color: #b91c1c;
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin-top: 8px;
+  }
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+
+  .btn {
+    min-width: 100px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &.btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+      border: none;
+
+      &:hover {
+        background: #d1d5db;
+      }
+    }
+
+    &.btn-danger {
+      background: #ef4444;
+      color: #ffffff;
+      border: none;
+
+      &:hover {
+        background: #dc2626;
+      }
+
+      .deleting-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid #ffffff;
+          border-top: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+      }
+    }
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .modal-content {
+    width: 95%;
+  }
+}
